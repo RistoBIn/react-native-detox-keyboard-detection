@@ -19,6 +19,7 @@
     "@react-native-community/eslint-config": "^2.0.0",
     "babel-jest": "^26.6.3",
     "detox": "^18.1.1",
+    "detox-getprops": "^0.1.2",
     "eslint": "^7.17.0",
     "jest": "^26.6.3",
     "jest-circus": "^26.6.3",

@@ -1,29 +1,52 @@
+const { getProps } = require('detox-getprops');
+
 const Platform = {
   ios: 'ios',
   android: 'android'
 };
 
-const expectKeyboardIsOpen = async (inputId) => {
+let originalLayout = null;
+
+const getCurrentLayout = async () => {
+  const rProps = await getProps(element(by.type('com.facebook.react.ReactRootView')));
+  return {
+    width: parseInt(rProps.width),
+    height: parseInt(rProps.height)
+  };
+}
+
+const expectKeyboardIsOpen = async () => {
   if (device.getPlatform() === Platform.ios) {
     await expect(element(by.type('UIRemoteKeyboardWindow'))).toExist();
   } else if (device.getPlatform() === Platform.android) {
-    device.pressBack();
-    expect(element(by.id(inputId))).toBeVisible();
+    const currentLayout = await getCurrentLayout();
+    if (currentLayout.height < originalLayout.height) {
+      return;
+    }
+    else {
+      throw "Keyboard is not opened."
+    }
   }
 }
 
-const expectKeyboardIsClose = async (inputId) => {
+const expectKeyboardIsClose = async () => {
   if (device.getPlatform() === 'ios') {
     await expect(element(by.type('UIRemoteKeyboardWindow'))).not.toExist();
   } else if (device.getPlatform() === Platform.android) {
-    device.pressBack();
-    expect(element(by.id(inputId))).not.toBeVisible();
+    const currentLayout = await getCurrentLayout();
+    if (currentLayout.height === originalLayout.height) {
+      return;
+    }
+    else {
+      throw "Keyboard is opened."
+    }
   }
 }
 
 describe('Example', () => {
   beforeAll(async () => {
     await device.launchApp();
+    originalLayout = await getCurrentLayout();
   });
 
   beforeEach(async () => {
@@ -36,12 +59,10 @@ describe('Example', () => {
 
   it('should open keyboard after textinput tap', async () => {
     await element(by.id('input1')).tap();
-    await expectKeyboardIsOpen("input1");
+    await expectKeyboardIsOpen();
   });
 
   it('should close keyboard after textinput not focused', async () => {
-    await element(by.id('input1')).tap();
-    await element(by.id('input1')).typeText('\n');
-    await expectKeyboardIsClose("input1");
+    await expectKeyboardIsClose();
   });
 });
